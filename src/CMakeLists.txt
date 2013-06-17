@@ -86,6 +86,7 @@ set (server_src
 include_directories (../include)
 include_directories (${INIPARSER_INCLUDE_DIRS})
 include_directories (${OPENSSL_INCLUDE_DIR})
+include_directories (${PTHREAD_INCLUDE_DIR})
 
 # Make build flags compiler specific
 if (CMAKE_COMPILER_IS_GNUCC)
