@@ -145,13 +145,17 @@ message ("")
 
 message (" * Configuration: ${CMAKE_BUILD_TYPE}")
 	
+if (VERSE_PYTHON_MODULE)
 if (PYTHON_LIBRARY)
 	message (" * Python:        ON")
 elseif (PYTHONLIBS_FOUND)
 	message (" * Python:        ON")
 else ()
 	message (" * Python:        OFF")
-endif ()
+endif (PYTHON_LIBRARY)
+else ()
+	message (" * Python:        OFF")
+endif (VERSE_PYTHON_MODULE)
 
 if (CHECK_FOUND)
 	message (" * Check:         ON")
