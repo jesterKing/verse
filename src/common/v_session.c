@@ -40,8 +40,13 @@
 
 void v_init_session(struct VSession *vsession)
 {
+#if defined(_WIN32)
+	vsession->tcp_thread.p = 0;
+	vsession->udp_thread.p = 0;
+#else
 	vsession->tcp_thread = 0;
 	vsession->udp_thread = 0;
+#endif
 	vsession->peer_hostname = NULL;
 	vsession->service = NULL;
 	vsession->session_id = 0;
@@ -66,8 +71,13 @@ void v_init_session(struct VSession *vsession)
 
 void v_destroy_session(struct VSession *vsession)
 {
+#if defined(_WIN32)
+	vsession->tcp_thread.p = 0;
+	vsession->udp_thread.p = 0;
+#else
 	vsession->tcp_thread = 0;
 	vsession->udp_thread = 0;
+#endif
 
 	if(vsession->dgram_conn != NULL) {
 		v_conn_dgram_destroy(vsession->dgram_conn);

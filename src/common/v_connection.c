@@ -33,13 +33,23 @@
  * Authors: Jiri Hnidek <jiri.hnidek@tul.cz>
  *
  */
+ 
+
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#endif
 
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#if !defined (_WIN32)
 #include <unistd.h>
+#endif
 
 #include "v_connection.h"
 #include "v_out_queue.h"

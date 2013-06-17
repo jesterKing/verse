@@ -36,8 +36,15 @@
 
 #include <stdio.h>
 #include <errno.h>
+#if !defined (_WIN32)
 #include <sys/ioctl.h>
 #include <linux/sockios.h>
+#else
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#endif
 
 #include "verse.h"
 #include "v_stream.h"
@@ -144,6 +151,7 @@ int v_STREAM_send_message(struct vContext *C)
 			(vsession->tmp_flags & SYS_CMD_NEGOTIATE_FPS))
 	{
 
+		#if !defined(_WIN32)
 		/* Get current size of data in TCP outgoing buffer */
 		if( (error = ioctl(io_ctx->sockfd, SIOCOUTQ, &queue_size)) == -1 ) {
 			perror("ioctl()");
@@ -152,6 +160,11 @@ int v_STREAM_send_message(struct vContext *C)
 
 		/* Compute, how many data could be added to the TCP stack? */
 		swin = conn->socket_buffer_size - queue_size;
+		#else
+		/* The above method with SIOCOUTQ doesn't exist on Windows. Assume just
+			socket_buffer_size instead. */
+		swin = conn->socket_buffer_size;
+		#endif
 
 		buffer_pos = VERSE_MESSAGE_HEADER_SIZE;
 

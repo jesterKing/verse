@@ -26,6 +26,11 @@
 #ifndef VS_MAIN_H_
 #define VS_MAIN_H_
 
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include <openssl/ssl.h>
 
 #include <stdio.h>

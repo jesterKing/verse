@@ -37,13 +37,18 @@
 #if !defined V_CONNECTION_H
 #define V_CONNECTION_H
 
-#include <openssl/ssl.h>
-
 #if defined(_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
 #include <time.h>
 #else
 #include <sys/time.h>
 #endif
+
+#include <openssl/ssl.h>
+
 #include <pthread.h>
 
 #include "v_network.h"

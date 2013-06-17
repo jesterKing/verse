@@ -33,14 +33,22 @@
  * Authors: Jiri Hnidek <jiri.hnidek@tul.cz>
  *
  */
+#if defined (_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#endif
+
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 
 #include <errno.h>
 #include <limits.h>

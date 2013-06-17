@@ -23,17 +23,21 @@
  *
  */
 
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-#include <openssl/err.h>
-
-#include <sys/socket.h>
+#if defined (_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#else
 #include <sys/types.h>
-#include <netinet/in.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 #include <unistd.h>
+#endif
+
 #include <fcntl.h>
 #include <string.h>
 #include <pthread.h>

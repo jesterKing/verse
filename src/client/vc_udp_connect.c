@@ -34,17 +34,25 @@
  *
  */
 
-#include <openssl/err.h>
-
+#if defined (_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#include <unistd.h>
+#endif
+
+#include <openssl/err.h>
+
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include "vc_main.h"
 #include "vc_udp_connect.h"
@@ -849,6 +857,7 @@ int vc_receive_and_handle_packet(struct vContext *C, int handle_packet(struct vC
 		/* Try to receive packet from server */
 		if(v_receive_packet(io_ctx, &error_num)==-1) {
 			switch(error_num) {
+#if !defined(_WIN32)
 				case ECONNREFUSED:	/* A remote host refused this connection */
 					return RECEIVE_PACKET_ERROR;
 				case EAGAIN:
@@ -860,6 +869,12 @@ int vc_receive_and_handle_packet(struct vContext *C, int handle_packet(struct vC
 				case ENOTCONN:
 				case ENOTSOCK:
 					break;
+#else
+				case WSAECONNREFUSED:
+					return RECEIVE_PACKET_ERROR;
+				default:
+					break;
+#endif
 			}
 		/* Address of received packet has to be same as address of server, when
 		 * connection is not connected */
@@ -1108,6 +1123,9 @@ struct VDgramConn *vc_create_client_dgram_conn(struct vContext *C)
 	int sockfd;
 	int flag, ret;
 	struct VURL url;
+#if defined(_WIN32)
+	unsigned long mode;
+#endif
 
 	/* Seed random number generator,  */
 #ifdef __APPLE__
@@ -1185,8 +1203,14 @@ struct VDgramConn *vc_create_client_dgram_conn(struct vContext *C)
 	dgram_conn->io_ctx.sockfd = sockfd;
 
 	/* Set socket non-blocking */
+#if !defined(_WIN32)
 	flag = fcntl(dgram_conn->io_ctx.sockfd, F_GETFL, 0);
 	if( (fcntl(dgram_conn->io_ctx.sockfd, F_SETFL, flag | O_NONBLOCK)) == -1) {
+#else
+	mode = 1;
+	flag = ioctlsocket(dgram_conn->io_ctx.sockfd, FIONBIO, &mode);
+	if(flag != 0) {
+#endif
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		free(dgram_conn);
 		freeaddrinfo(result);

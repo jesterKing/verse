@@ -23,18 +23,30 @@
  *
  */
 
-#include <openssl/rand.h>
-#include <openssl/ssl.h>
-
+#if defined (_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+
+#include <unistd.h>
+#endif
+
+#include <openssl/rand.h>
+#include <openssl/ssl.h>
 
 #include <signal.h>
 
 #include <errno.h>
+#if !defined(_WIN32)
 #include <sys/time.h>
+#endif
 #include <time.h>
 
 #include <stdio.h>
@@ -42,7 +54,6 @@
 #include <string.h>
 #include <limits.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include "vs_main.h"
 #include "vs_udp_connect.h"

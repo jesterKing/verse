@@ -34,10 +34,12 @@
  *
  */
 
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-#include <openssl/err.h>
-
+#if defined (_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -45,6 +47,12 @@
 #include <netdb.h>
 
 #include <unistd.h>
+#endif
+
+#include <openssl/ssl.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+
 #include <string.h>
 #include <fcntl.h>
 
@@ -119,13 +127,21 @@ static int vc_STREAM_OPEN_loop(struct vContext *C)
 	struct timeval tv;
 	fd_set set;
 	int flag, ret;
+#if defined(_WIN32)
+	unsigned long mode;
+#endif
 
 	/* Set socket non-blocking */
+#if !defined(_WIN32)
 	flag = fcntl(io_ctx->sockfd, F_GETFL, 0);
 	if( (fcntl(io_ctx->sockfd, F_SETFL, flag | O_NONBLOCK)) == -1) {
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		return -1;
 	}
+#else
+	mode = 1;
+	flag = ioctlsocket(io_ctx->sockfd, FIONBIO, &mode);
+#endif
 
 	/* Put connect accept command to queue -> call callback function */
 	conn_accept = v_Connect_Accept_create(vsession->avatar_id, vsession->user_id);
@@ -161,11 +177,16 @@ static int vc_STREAM_OPEN_loop(struct vContext *C)
 end:
 
 	/* Set socket blocking again */
+#if !defined(_WIN32)
 	flag = fcntl(io_ctx->sockfd, F_GETFL, 0);
 	if( (fcntl(io_ctx->sockfd, F_SETFL, flag & ~O_NONBLOCK)) == -1) {
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		return -1;
 	}
+#else
+	mode = 0;
+	flag = ioctlsocket(io_ctx->sockfd, FIONBIO, &mode);
+#endif
 
 	return 1;
 }
@@ -997,6 +1018,9 @@ struct VStreamConn *vc_create_client_stream_conn(const struct VC_CTX *ctx,
 #ifndef __APPLE__
 	struct timeval tv;
 #endif
+#if defined(_WIN32)
+	unsigned long mode;
+#endif
 
 	*error = VRS_CONN_TERM_RESERVED;
 
@@ -1097,6 +1121,7 @@ struct VStreamConn *vc_create_client_stream_conn(const struct VC_CTX *ctx,
 			(void *)&stream_conn->socket_buffer_size, &int_size);
 
 	/* Make sure socket is blocking */
+#if !defined(_WIN32)
 	flag = fcntl(stream_conn->io_ctx.sockfd, F_GETFL, 0);
 	if( (fcntl(stream_conn->io_ctx.sockfd, F_SETFL, flag & ~O_NONBLOCK)) == -1) {
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
@@ -1104,6 +1129,17 @@ struct VStreamConn *vc_create_client_stream_conn(const struct VC_CTX *ctx,
 		*error = VRS_CONN_TERM_ERROR;
 		return NULL;
 	}
+#else
+	mode = 0;
+	flag = ioctlsocket(stream_conn->io_ctx.sockfd, FIONBIO, &mode);
+	if(flag!=0) {
+		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "ioctlsocket(): %s", strerror(NULL));
+		free(stream_conn);
+		*error = VRS_CONN_TERM_ERROR;
+		return NULL;
+	}
+	
+#endif
 
 	/* Set up SSL */
 	if( (stream_conn->io_ctx.ssl=SSL_new(ctx->tls_ctx)) == NULL) {
@@ -1161,8 +1197,22 @@ void vc_main_stream_loop(struct VC_CTX *vc_ctx, struct VSession *vsession)
 	int ret;
 	uint8 error = 0;
 	uint8 *udp_thread_result;
+	
+#if defined(_WIN32)
+	static int initialized = 0;
+#endif
 
 	struct Connect_Terminate_Cmd *conn_term;
+	
+#if defined(_WIN32)
+	if(initialized!=1) {
+		WSADATA wsaData;
+		if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) {
+			fprintf(stderr, "WSAStartup failed.\n");
+			goto closed;
+		}
+	}
+#endif
 
 	/* Initialize new TCP connection to the server. */
 	if( (stream_conn = vc_create_client_stream_conn(vc_ctx, vsession->peer_hostname, vsession->service, &error)) == NULL ) {
@@ -1333,7 +1383,7 @@ closing:
 	}
 
 	/* If UDP thread was created, when wait for UDP thread */
-	if(vsession->udp_thread != 0) {
+	if(vsession->udp_thread.p != 0) {
 		/* Wait for UDP thread (this is blocking operation) */
 		v_print_log(VRS_PRINT_DEBUG_MSG, "Waiting for join with UDP thread ...\n");
 		if(pthread_join(vsession->udp_thread, (void*)&udp_thread_result) != 0) {

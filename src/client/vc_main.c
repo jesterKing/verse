@@ -34,10 +34,6 @@
  *
  */
 
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-#include <openssl/err.h>
-
 #if defined (_WIN32)
 #include <winsock2.h>
 #include <windows.h>
@@ -57,11 +53,18 @@
 #endif
 #include <time.h>
 
+#include <openssl/ssl.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 
 #include <fcntl.h>
 
