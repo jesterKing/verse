@@ -128,15 +128,16 @@ target_link_libraries (verse_server
 
 # The rule to install Verse server
 install (TARGETS verse_server
-	RUNTIME
+	RUNTIME DESTINATION bin
 	CONFIGURATIONS "Debug"
-	DESTINATION bin)
+	)
 
 # The rule to install shared library used by Verse server and Verse clients
 install (TARGETS verse_shared_lib
-	LIBRARY
 	CONFIGURATIONS "Debug"
-	DESTINATION lib)
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	)
 
 # TODO: Make building static verse library (libverse.a) optional
 #add_library (verse_static STATIC ${libverse_src})
