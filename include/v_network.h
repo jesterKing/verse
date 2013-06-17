@@ -39,7 +39,14 @@
 
 #include <openssl/ssl.h>
 
+#if defined (_WIN32)
+#include <winsock2.h>
+#include <windows.h>
+#include <winbase.h>
+#include <direct.h>
+#else
 #include <netinet/in.h>
+#endif
 #include <limits.h>
 
 #include "v_commands.h"

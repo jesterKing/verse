@@ -39,7 +39,11 @@
 
 #include <openssl/ssl.h>
 
+#if defined(_WIN32)
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 #include <pthread.h>
 
 #include "v_network.h"
