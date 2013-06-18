@@ -10,12 +10,20 @@ set (verse_client_src verse_client.c)
 
 # Directory with .h files
 include_directories (../include)
+if(WIN32)
+include_directories (../include/win)
+endif()
 include_directories (${OPENSSL_INCLUDE_DIR})
 
 # Define executable
 add_executable (verse_client ${verse_client_src})
 add_dependencies (verse_client verse_shared_lib)
+if(WIN32)
+	add_dependencies (verse_client winstuff_lib)
+endif()
 target_link_libraries (verse_client
 		verse_shared_lib
+		${EXTRA_LIBS}
 		${CMAKE_THREAD_LIBS_INIT}
-		${OPENSSL_LIBRARIES})
+		${OPENSSL_LIBRARIES}
+		${PLATFORM_LINKLIBS})

@@ -26,7 +26,13 @@
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
+
+#if defined(_WIN32)
+#include "v_getopt.h"
+#endif
 
 #include "verse_types.h"
 
@@ -110,7 +116,7 @@ static void vs_load_default_values(struct VS_CTX *vs_ctx)
 		vs_ctx->port_list[i].port_number = (unsigned short)(vs_ctx->port_low + i);
 	}
 
-	vs_ctx->tcp_io_ctx.host_addr.ip_ver = IPV6;
+	vs_ctx->tcp_io_ctx.host_addr.ip_ver = IPV4;
 
 	vs_ctx->print_log_level = VRS_PRINT_DEBUG_MSG;
 	vs_ctx->log_file = stdout;
@@ -374,6 +380,16 @@ int main(int argc, char *argv[])
 	char *config_file=NULL;
 	int debug_level_set = 0;
 	void *res;
+
+#if defined(_WIN32)
+	{
+		WSADATA wsaData;
+		if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) {
+			fprintf(stderr, "WSAStartup failed.\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+#endif
 
 	/* Set up initial state */
 	vs_ctx.state = SERVER_STATE_CONF;

@@ -40,10 +40,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#include <stdint.h>
+#endif
 #include <signal.h>
 #include <string.h>
-#include <stdint.h>
+ 
+#if defined(_WIN32)
+#include "v_getopt.h"
+#include "v_time.h"
+#endif
 
 #include "verse.h"
 
@@ -764,6 +771,25 @@ static void cb_receive_connect_terminate(const uint8_t session_id,
 	exit(EXIT_SUCCESS);
 }
 
+static char *getpass(char *prompt)
+{
+	int result, length;
+	char *cpw, pw[256];
+	pw[0] = '\0';
+	
+	result = scanf("%255s", pw);
+	length = strlen(pw);
+	cpw = NULL;
+	if(result==1 && length > 0) {
+		cpw = malloc(length+1);
+		memcpy(cpw, result, length);
+		cpw[length+1] = '\0';
+	}
+	
+	return cpw;
+	
+}
+
 /**
  * \brief Callback function for user authentication.
  *
@@ -884,6 +910,16 @@ static void print_help(char *prog_name)
 int main(int argc, char *argv[])
 {
 	int error_num, opt, ret, flags = VRS_SEC_DATA_NONE;
+	
+#if defined(_WIN32)
+	{
+		WSADATA wsaData;
+		if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) {
+			fprintf(stderr, "WSAStartup failed.\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+#endif
 
 	/* When client was started with some arguments */
 	if(argc>1) {

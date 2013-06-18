@@ -37,8 +37,7 @@
 #if defined (_WIN32)
 #include <winsock2.h>
 #include <windows.h>
-#include <winbase.h>
-#include <direct.h>
+#include "v_time.h"
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -1124,22 +1123,16 @@ struct VStreamConn *vc_create_client_stream_conn(const struct VC_CTX *ctx,
 #if !defined(_WIN32)
 	flag = fcntl(stream_conn->io_ctx.sockfd, F_GETFL, 0);
 	if( (fcntl(stream_conn->io_ctx.sockfd, F_SETFL, flag & ~O_NONBLOCK)) == -1) {
+#else
+	mode = 0;
+	flag = ioctlsocket(stream_conn->io_ctx.sockfd, FIONBIO, &mode);
+	if(flag!=0) {
+#endif
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		free(stream_conn);
 		*error = VRS_CONN_TERM_ERROR;
 		return NULL;
 	}
-#else
-	mode = 0;
-	flag = ioctlsocket(stream_conn->io_ctx.sockfd, FIONBIO, &mode);
-	if(flag!=0) {
-		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "ioctlsocket(): %s", strerror(NULL));
-		free(stream_conn);
-		*error = VRS_CONN_TERM_ERROR;
-		return NULL;
-	}
-	
-#endif
 
 	/* Set up SSL */
 	if( (stream_conn->io_ctx.ssl=SSL_new(ctx->tls_ctx)) == NULL) {
@@ -1197,22 +1190,8 @@ void vc_main_stream_loop(struct VC_CTX *vc_ctx, struct VSession *vsession)
 	int ret;
 	uint8 error = 0;
 	uint8 *udp_thread_result;
-	
-#if defined(_WIN32)
-	static int initialized = 0;
-#endif
 
 	struct Connect_Terminate_Cmd *conn_term;
-	
-#if defined(_WIN32)
-	if(initialized!=1) {
-		WSADATA wsaData;
-		if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) {
-			fprintf(stderr, "WSAStartup failed.\n");
-			goto closed;
-		}
-	}
-#endif
 
 	/* Initialize new TCP connection to the server. */
 	if( (stream_conn = vc_create_client_stream_conn(vc_ctx, vsession->peer_hostname, vsession->service, &error)) == NULL ) {

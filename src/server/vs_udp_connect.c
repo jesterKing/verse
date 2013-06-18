@@ -26,8 +26,8 @@
 #if defined (_WIN32)
 #include <winsock2.h>
 #include <windows.h>
-#include <winbase.h>
-#include <direct.h>
+
+#define in_port_t	uint16_t
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -1250,6 +1250,9 @@ static int vs_init_dgram_ctx(struct vContext *C)
 	struct VSession *vsession = CTX_current_session(C);
 	struct VDgramConn *dgram_conn = CTX_current_dgram_conn(C);
 	int flag;
+#if defined(_WIN32)
+	unsigned long mode;
+#endif
 
 	/* "Address" of server */
 	if(dgram_conn->io_ctx.host_addr.ip_ver == IPV4) {		/* IPv4 */
@@ -1264,8 +1267,14 @@ static int vs_init_dgram_ctx(struct vContext *C)
 		}
 
 		/* Set socket non-blocking */
+#if !defined(_WIN32)
 		flag = fcntl(dgram_conn->io_ctx.sockfd, F_GETFL, 0);
 		if( (fcntl(dgram_conn->io_ctx.sockfd, F_SETFL, flag | O_NONBLOCK)) == -1) {
+#else
+		mode = 1;
+		flag = ioctlsocket(dgram_conn->io_ctx.sockfd, FIONBIO, &mode);
+		if(flag != 0) {
+#endif
 			if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 			return -1;
 		}
@@ -1300,8 +1309,14 @@ static int vs_init_dgram_ctx(struct vContext *C)
 		}
 
 		/* Set socket non-blocking */
+#if !defined(_WIN32)
 		flag = fcntl(dgram_conn->io_ctx.sockfd, F_GETFL, 0);
 		if( (fcntl(dgram_conn->io_ctx.sockfd, F_SETFL, flag | O_NONBLOCK)) == -1) {
+#else
+		mode = 1;
+		flag = ioctlsocket(dgram_conn->io_ctx.sockfd, FIONBIO, &mode);
+		if(flag != 0) {
+#endif
 			if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 			return -1;
 		}
@@ -1605,7 +1620,11 @@ again:
 					}
 				}
 			} else {
+#if !defined (_WIN32)
 				if(error_num == ECONNREFUSED) {
+#else
+				if(error_num == WSAECONNREFUSED) {
+#endif
 					v_print_log(VRS_PRINT_WARNING, "Closing connection ...\n");
 					break;
 				}

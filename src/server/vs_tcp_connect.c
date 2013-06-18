@@ -26,8 +26,7 @@
 #if defined (_WIN32)
 #include <winsock2.h>
 #include <windows.h>
-#include <winbase.h>
-#include <direct.h>
+#include "v_time.h"
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -111,12 +110,21 @@ static int vs_TLS_handshake(struct vContext *C)
 	struct VS_CTX *vs_ctx = CTX_server_ctx(C);
 	struct IO_CTX *io_ctx = CTX_io_ctx(C);
 	struct VStreamConn *stream_conn = CTX_current_stream_conn(C);
+#if defined(_WIN32)
+	unsigned long mode;
+#endif
 
 	int flag, ret;
 
+#if !defined(_WIN32)
 	/* Make sure socket is blocking */
 	flag = fcntl(stream_conn->io_ctx.sockfd, F_GETFL, 0);
 	if( (fcntl(stream_conn->io_ctx.sockfd, F_SETFL, flag & ~O_NONBLOCK)) == -1) {
+#else
+	mode = 0;
+	flag = ioctlsocket(stream_conn->io_ctx.sockfd, FIONBIO, &mode);
+	if( flag != 0) {
+#endif
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		return 0;
 	}
@@ -219,10 +227,19 @@ static int vs_STREAM_OPEN_loop(struct vContext *C)
 	struct timeval tv;
 	fd_set set;
 	int flag, ret;
+#if defined(_WIN32)
+	unsigned long mode;
+#endif
 
+#if !defined(_WIN32)
 	/* Set socket non-blocking */
 	flag = fcntl(io_ctx->sockfd, F_GETFL, 0);
 	if( (fcntl(io_ctx->sockfd, F_SETFL, flag | O_NONBLOCK)) == -1) {
+#else
+	mode = 1;
+	flag = ioctlsocket(io_ctx->sockfd, FIONBIO, &mode);
+	if(flag != 0) {
+#endif
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		return -1;
 	}
@@ -260,8 +277,14 @@ static int vs_STREAM_OPEN_loop(struct vContext *C)
 end:
 
 	/* Set socket blocking again */
+#if !defined(_WIN32)
 	flag = fcntl(io_ctx->sockfd, F_GETFL, 0);
 	if( (fcntl(io_ctx->sockfd, F_SETFL, flag & ~O_NONBLOCK)) == -1) {
+#else
+	mode = 0;
+	flag = ioctlsocket(io_ctx->sockfd, FIONBIO, &mode);
+	if(flag != 0) {
+#endif
 		if(is_log_level(VRS_PRINT_ERROR)) v_print_log(VRS_PRINT_ERROR, "fcntl(): %s\n", strerror(errno));
 		return -1;
 	}
@@ -932,7 +955,11 @@ end:
 	}
 
 	/* Was udp thread created? */
+#if !defined(_WIN32)
 	if(vsession->udp_thread != 0 ) {
+#else
+	if(vsession->udp_thread.p != 0 ) {
+#endif
 		/* Wait for UDP thread (this is blocking operation) */
 		v_print_log(VRS_PRINT_DEBUG_MSG, "Waiting for join with UDP thread ...\n");
 		if(pthread_join(vsession->udp_thread, &udp_thread_result) != 0) {

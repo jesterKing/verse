@@ -65,6 +65,7 @@
 #include "v_fake_commands.h"
 #include "v_session.h"
 #include "v_resend_mechanism.h"
+#include "v_time.h"
 
 /************************************** REQUEST state **************************************/
 

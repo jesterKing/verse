@@ -24,6 +24,9 @@ set (${PROJECT_NAME}_PATCH_LEVEL 0)
 set (${PROJECT_NAME}_VERSION
 	"${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}")
 
+# used for windows specific code in verse repo
+set(EXTRA_LIBS "")
+
 # Build options
 option(VERSE_CLANG "Use Clang Compiler" OFF)
 option(VERSE_PYTHON_MODULE "Verse Module" ON)
@@ -42,6 +45,15 @@ set (CMAKE_MODULE_PATH
 
 # Pthread is *prefered* (only supported) thread library
 set (CMAKE_THREAD_PREFER_PTHREAD)
+
+# Collect OS level libraries to link to.
+set (PLATFORM_LINKLIBS "")
+
+if(WIN32)
+	if(MSVC)
+		set(PLATFORM_LINKLIBS kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ws2_32.lib)
+	endif(MSVC)
+endif(WIN32)
 
 # Try to find required packages
 find_package (OpenSSL REQUIRED)
