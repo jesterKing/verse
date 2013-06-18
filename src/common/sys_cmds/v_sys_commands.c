@@ -194,7 +194,7 @@ int v_unpack_message_system_commands(const char *buffer,
 		unsigned short buffer_len,
 		struct VMessage *vmessage)
 {
-	unsigned short not_used, buffer_pos=0;
+	unsigned short not_used=0, buffer_pos=0;
 	unsigned char length, cmd_id=CMD_RESERVED_ID;
 	int i=0;
 
