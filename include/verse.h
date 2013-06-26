@@ -60,7 +60,21 @@ typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 
+#ifndef PYVERSE
 typedef long ssize_t;
+#endif
+
+#ifndef UINT8_MAX
+#define UINT8_MAX	UCHAR_MAX
+#endif
+
+#ifndef UINT16_MAX
+#define UINT16_MAX	USHRT_MAX
+#endif
+
+#ifndef UINT32_MAX
+#define UINT32_MAX	UINT_MAX
+#endif
 
 #else
 #include <stdint.h>

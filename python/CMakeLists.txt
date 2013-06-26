@@ -17,15 +17,17 @@ set (verse_module_src verse_module.c)
 add_library (pyverse SHARED ${verse_module_src})
 set_target_properties (pyverse PROPERTIES PREFIX "")
 set_target_properties (pyverse PROPERTIES 
-		OUTPUT_NAME "verse"
+		OUTPUT_NAME "verse${VERSE_VERSION}"
+		LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/python/"
 		clean_direct_output 1)
 add_dependencies (pyverse verse_shared_lib)
 target_link_libraries (pyverse
 		verse_shared_lib
 		${CMAKE_THREAD_LIBS_INIT}
-		${OPENSSL_LIBRARIES})
+		${OPENSSL_LIBRARIES}
+		${PYTHON_LIBRARY})
 
 install (TARGETS pyverse
-	LIBRARY
-	CONFIGURATIONS "Debug"
-	DESTINATION lib/python${PYTHON_VERSION}/site-packages)
+	LIBRARY DESTINATION lib/python${PYTHON_VERSION}/site-packages
+	ARCHIVE DESTINATION lib/python${PYTHON_VERSION}/site-packages
+	CONFIGURATIONS "Debug")

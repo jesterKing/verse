@@ -38,6 +38,8 @@
 #include <structmember.h>
 #include <assert.h>
 
+#define PYVERSE 1
+
 #include "verse.h"
 #include "verse_types.h"
 
