@@ -17,12 +17,12 @@ include_directories (${OPENSSL_INCLUDE_DIR})
 
 # Define executable
 add_executable (verse_client ${verse_client_src})
-add_dependencies (verse_client verse_shared_lib)
+add_dependencies (verse_client verse_static_lib)
 if(WIN32)
 	add_dependencies (verse_client winstuff_lib)
 endif()
 target_link_libraries (verse_client
-		verse_shared_lib
+		verse_static_lib
 		${EXTRA_LIBS}
 		${CMAKE_THREAD_LIBS_INIT}
 		${OPENSSL_LIBRARIES}
