@@ -777,6 +777,7 @@ static char *getpass(char *prompt)
 	char *cpw, pw[256];
 	pw[0] = '\0';
 	
+	printf("%s", prompt);
 	result = scanf("%255s", pw);
 	length = strlen(pw);
 	cpw = NULL;
