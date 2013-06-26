@@ -782,8 +782,8 @@ static char *getpass(char *prompt)
 	cpw = NULL;
 	if(result==1 && length > 0) {
 		cpw = malloc(length+1);
-		memcpy(cpw, result, length);
-		cpw[length+1] = '\0';
+		memcpy(cpw, pw, length);
+		cpw[length] = '\0';
 	}
 	
 	return cpw;
