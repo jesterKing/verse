@@ -14,15 +14,15 @@ include_directories (${PYTHON_INCLUDE_DIRS})
 
 set (verse_module_src verse_module.c)
 
+message("Python lib: ${PYTHON_LIBRARY}")
+
 add_library (pyverse SHARED ${verse_module_src})
 set_target_properties (pyverse PROPERTIES PREFIX "")
 set_target_properties (pyverse PROPERTIES 
-		OUTPUT_NAME "pyverse${VERSE_VERSION}"
-		LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/python/"
-		clean_direct_output 1)
-add_dependencies (pyverse verse_shared_lib)
+		OUTPUT_NAME "python/verse${VERSE_VERSION}")
+add_dependencies (pyverse verse_static_lib)
 target_link_libraries (pyverse
-		verse_shared_lib
+		verse_static_lib
 		${CMAKE_THREAD_LIBS_INIT}
 		${OPENSSL_LIBRARIES}
 		${PYTHON_LIBRARY})
