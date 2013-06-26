@@ -115,7 +115,7 @@ if (MSVC)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		set (CMAKE_C_FLAGS "-D_REETRANT /MTd -Od")
 	elseif( CMAKE_BUILD_TYPE STREQUAL "Release" )
-		set (CMAKE_C_FLAGS "-D_REETRANT -DNDEBUG /MT	-O2")
+		set (CMAKE_C_FLAGS "-D_REETRANT -DNDEBUG /MT -O2")
 	endif ()
 	set (CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:CONSOLE /INCREMENTAL:NO /NODEFAULTLIB:libcmt.lib /NODEFAULTLIB:libcmtd.lib")
 endif (MSVC)
@@ -123,8 +123,7 @@ endif (MSVC)
 if(WIN32)
 	add_library (winstuff_lib STATIC ${winstuff_src})
 	set_target_properties (winstuff_lib PROPERTIES 
-		OUTPUT_NAME "winstuff"
-		LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/static/"
+		OUTPUT_NAME "static/winstuff"
 	)
 	set (EXTRA_LIBS ${EXTRA_LIBS} winstuff_lib)
 endif()
@@ -132,13 +131,18 @@ endif()
 
 # Set up shared verse library (libverse.so)
 add_library (verse_shared_lib SHARED ${libverse_src})
+set_target_properties (verse_shared_lib PROPERTIES
+		VERSION "${${PROJECT_NAME}_VERSION}"
+		SOVERSION "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_PATCH_LEVEL}"
+		OUTPUT_NAME "verse")
 if (WIN32)
 
 # TODO: Make building static verse library (libverse.a) optional
 add_library (verse_static_lib STATIC ${libverse_src})
 set_target_properties (verse_static_lib PROPERTIES 
-		OUTPUT_NAME "verse"
-		LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/static/")
+		OUTPUT_NAME "verse")
+set_target_properties (verse_static_lib PROPERTIES PREFIX "lib")
+
 target_link_libraries (verse_shared_lib
 		${EXTRA_LIBS}
 		${LIB_EAY_DEBUG}
@@ -155,11 +159,6 @@ target_link_libraries(verse_static_lib
 		${PTHREAD_LIBRARIES}
 		${PLATFORM_LINKLIBS})
 endif(WIN32)
-set_target_properties (verse_shared_lib PROPERTIES
-		VERSION "${${PROJECT_NAME}_VERSION}"
-		SOVERSION "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_PATCH_LEVEL}"
-		OUTPUT_NAME "verse"
-		clean_direct_output 1)
 
 
 # Make build flags compiler specific
@@ -184,7 +183,7 @@ add_dependencies (verse_server verse_shared_lib)
 if(WIN32)
 add_dependencies (verse_server winstuff_lib)
 target_link_libraries (verse_server
-		verse_shared_lib
+		verse_static_lib
 		${EXTRA_LIBS}
 		${CMAKE_THREAD_LIBS_INIT}
 		${LIB_EAY_DEBUG}
