@@ -771,6 +771,8 @@ static void cb_receive_connect_terminate(const uint8_t session_id,
 	exit(EXIT_SUCCESS);
 }
 
+#if defined(_WIN32)
+
 static char *getpass(char *prompt)
 {
 	int result, length;
@@ -790,6 +792,8 @@ static char *getpass(char *prompt)
 	return cpw;
 	
 }
+
+#endif
 
 /**
  * \brief Callback function for user authentication.
