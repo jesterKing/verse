@@ -17,7 +17,7 @@ set (verse_module_src verse_module.c)
 add_library (pyverse SHARED ${verse_module_src})
 set_target_properties (pyverse PROPERTIES PREFIX "")
 set_target_properties (pyverse PROPERTIES 
-		OUTPUT_NAME "verse${VERSE_VERSION}"
+		OUTPUT_NAME "pyverse${VERSE_VERSION}"
 		LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/python/"
 		clean_direct_output 1)
 add_dependencies (pyverse verse_shared_lib)
