@@ -34,7 +34,17 @@
  *
  */
 
+#if defined(_DEBUG) && defined (_WIN32)
+#undef _DEBUG
+#define _RESET_DEBUG 1
+#endif
+
 #include <Python.h>
+
+#if defined(_RESET_DEBUG)
+#define _DEBUG
+#endif
+
 #include <structmember.h>
 #include <assert.h>
 
