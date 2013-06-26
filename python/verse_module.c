@@ -33,6 +33,10 @@
  * Authors: Jiri Hnidek <jiri.hnidek@tul.cz>
  *
  */
+ 
+#if defined (_WIN32)
+#include <winsock2.h>
+#endif
 
 #if defined(_DEBUG) && defined (_WIN32)
 #undef _DEBUG
@@ -2580,10 +2584,22 @@ PyMODINIT_FUNC PyInit_verse(void)
 	PyModule_AddIntConstant(module, "VALUE_TYPE_REAL32", VRS_VALUE_TYPE_REAL32);
 	PyModule_AddIntConstant(module, "VALUE_TYPE_REAL64", VRS_VALUE_TYPE_REAL64);
 	PyModule_AddIntConstant(module, "VALUE_TYPE_STRING8", VRS_VALUE_TYPE_STRING8);
+	
+
+#if defined(_WIN32)
+	{
+		WSADATA wsaData;
+		if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0) {
+			fprintf(stderr, "WSAStartup failed.\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+#endif
 
 	return module;
 }
 
+#if !defined (_WIN32)
 /* Main function of verse module */
 int main(int argc, char *argv[])
 {
@@ -2601,3 +2617,4 @@ int main(int argc, char *argv[])
 
 	return 1;
 }
+#endif
